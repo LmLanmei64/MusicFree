@@ -169,51 +169,50 @@ jobs:
             - name: Setup keystore
               run: |
       # Create secure temporary directory
-                TEMP_DIR=$(mktemp -d)
-                KEYSTORE_PATH="$TEMP_DIR/release.keystore"
-                KEYSTORE_PROPS="$TEMP_DIR/keystore.properties"
+                    TEMP_DIR=$(mktemp -d)
+                    KEYSTORE_PATH="$TEMP_DIR/release.keystore"
+                    KEYSTORE_PROPS="$TEMP_DIR/keystore.properties"
 
       # Decode base64 secret to keystore file
-                echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+                    echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
 
       # 🔧 新增：强制将密钥库转换为 JKS 格式（解决兼容性问题）
       # 如果原始密钥库不是 JKS，则转换；如果是 JKS，此操作无影响
-                echo "🔧 Ensuring keystore is in JKS format..."
-                cp "$KEYSTORE_PATH" "$KEYSTORE_PATH.original"
-                keytool -importkeystore \
-                -srckeystore "$KEYSTORE_PATH.original" \
-                -destkeystore "$KEYSTORE_PATH" \
-                -srcstoretype PKCS12 \
-                -deststoretype JKS \
-                -srcstorepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-                -deststorepass "${{ secrets.KEYSTORE_PASSWORD }}" \
-                -srckeypass "${{ secrets.KEY_PASSWORD }}" \
-                -destkeypass "${{ secrets.KEY_PASSWORD }}" \
-                -srcalias "${{ secrets.KEY_ALIAS }}" \
-                -destalias "${{ secrets.KEY_ALIAS }}" \
-                -noprompt 2>/dev/null || echo "Keystore already in JKS format or conversion not needed."
+                    echo "🔧 Ensuring keystore is in JKS format..."
+                    cp "$KEYSTORE_PATH" "$KEYSTORE_PATH.original"
+                    keytool -importkeystore \
+                    -srckeystore "$KEYSTORE_PATH.original" \
+                    -destkeystore "$KEYSTORE_PATH" \
+                    -srcstoretype PKCS12 \
+                    -deststoretype JKS \
+                    -srcstorepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+                    -deststorepass "${{ secrets.KEYSTORE_PASSWORD }}" \
+                    -srckeypass "${{ secrets.KEY_PASSWORD }}" \
+                    -destkeypass "${{ secrets.KEY_PASSWORD }}" \
+                    -srcalias "${{ secrets.KEY_ALIAS }}" \
+                    -destalias "${{ secrets.KEY_ALIAS }}" \
+                    -noprompt 2>/dev/null || echo "Keystore already in JKS format or conversion not needed."
 
       # Create keystore.properties file
-                cat > "$KEYSTORE_PROPS" << EOF
-                    RELEASE_STORE_FILE=release.keystore
+                    cat > "$KEYSTORE_PROPS" << EOF                        RELEASE_STORE_FILE=release.keystore
                     RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
                     RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
                     RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
-                EOF
+                    EOF
 
       # Move to android directory
-                mv "$KEYSTORE_PATH" android/app/release.keystore
-                mv "$KEYSTORE_PROPS" android/keystore.properties
+                    mv "$KEYSTORE_PATH" android/app/release.keystore
+                    mv "$KEYSTORE_PROPS" android/keystore.properties
 
       # Set restrictive permissions
-                chmod 600 android/app/release.keystore
-                chmod 600 android/keystore.properties
+                    chmod 600 android/app/release.keystore
+                    chmod 600 android/keystore.properties
 
       # 🔧 可选：验证密钥库内容（便于调试）
-                echo "🔍 Verifying keystore contents:"
-                keytool -list -keystore android/app/release.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" || echo "⚠️ Unable to list keystore entries"
+                    echo "🔍 Verifying keystore contents:"
+                    keytool -list -keystore android/app/release.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" || echo "⚠️ Unable to list keystore entries"
 
-                echo "🔐 Keystore configured securely"
+                    echo "🔐 Keystore configured securely"
 
 # 🚀 构建 Android APK
             - name: Build Android APK
