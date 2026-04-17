@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 允许共享外部存储上的下载文件 -->
+<paths>
+    <!-- 外部存储公共目录，如 Music, Download -->
     <external-path name="external" path="." />
-    <cache-path name="cache" path="." />
+    <!-- 外部存储应用私有文件目录 (RNFS.DocumentDirectoryPath 的外部版本) -->
+    <external-files-path name="external_files" path="." />
+    <!-- 内部存储应用私有文件目录 (RNFS.DocumentDirectoryPath 的内部版本) -->
     <files-path name="files" path="." />
+    <!-- 缓存目录 -->
+    <cache-path name="cache" path="." />
+    <external-cache-path name="external_cache" path="." />
 </paths>
-
