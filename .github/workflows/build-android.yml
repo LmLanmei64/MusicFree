@@ -165,22 +165,21 @@ jobs:
                     --quiet \
                     || echo "⚠️  Pre-build completed with warnings"
 
- # 🔐 设置签名证书
+            # 🔐 设置签名证书
             - name: Setup keystore
               run: |
-      # Create secure temporary directory
-                    TEMP_DIR=$(mktemp -d)
-                    KEYSTORE_PATH="$TEMP_DIR/release.keystore"
-                    KEYSTORE_PROPS="$TEMP_DIR/keystore.properties"
+                  # Create secure temporary directory
+                  TEMP_DIR=$(mktemp -d)
+                  KEYSTORE_PATH="$TEMP_DIR/release.keystore"
+                  KEYSTORE_PROPS="$TEMP_DIR/keystore.properties"
 
-      # Decode base64 secret to keystore file
-                    echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
+                  # Decode base64 secret to keystore file
+                  echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$KEYSTORE_PATH"
 
-      # 🔧 新增：强制将密钥库转换为 JKS 格式（解决兼容性问题）
-      # 如果原始密钥库不是 JKS，则转换；如果是 JKS，此操作无影响
-                    echo "🔧 Ensuring keystore is in JKS format..."
-                    cp "$KEYSTORE_PATH" "$KEYSTORE_PATH.original"
-                    keytool -importkeystore \
+                  # 🔧 强制将密钥库转换为 JKS 格式（解决兼容性问题）
+                  echo "🔧 Ensuring keystore is in JKS format..."
+                  cp "$KEYSTORE_PATH" "$KEYSTORE_PATH.original"
+                  keytool -importkeystore \
                     -srckeystore "$KEYSTORE_PATH.original" \
                     -destkeystore "$KEYSTORE_PATH" \
                     -srcstoretype PKCS12 \
@@ -193,33 +192,33 @@ jobs:
                     -destalias "${{ secrets.KEY_ALIAS }}" \
                     -noprompt 2>/dev/null || echo "Keystore already in JKS format or conversion not needed."
 
-      # Create keystore.properties file
-                    cat > "$KEYSTORE_PROPS" << EOF                        RELEASE_STORE_FILE=release.keystore
-                    RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
-                    RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
-                    RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
-                    EOF
+                  # Create keystore.properties file
+                  cat > "$KEYSTORE_PROPS" << EOF
+                  RELEASE_STORE_FILE=release.keystore
+                  RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}
+                  RELEASE_KEY_ALIAS=${{ secrets.KEY_ALIAS }}
+                  RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}
+                  EOF
 
-      # Move to android directory
-                    mv "$KEYSTORE_PATH" android/app/release.keystore
-                    mv "$KEYSTORE_PROPS" android/keystore.properties
+                  # Move to android directory
+                  mv "$KEYSTORE_PATH" android/app/release.keystore
+                  mv "$KEYSTORE_PROPS" android/keystore.properties
 
-      # Set restrictive permissions
-                    chmod 600 android/app/release.keystore
-                    chmod 600 android/keystore.properties
+                  # Set restrictive permissions
+                  chmod 600 android/app/release.keystore
+                  chmod 600 android/keystore.properties
 
-      # 🔧 可选：验证密钥库内容（便于调试）
-                    echo "🔍 Verifying keystore contents:"
-                    keytool -list -keystore android/app/release.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" || echo "⚠️ Unable to list keystore entries"
+                  # 🔧 可选：验证密钥库内容（便于调试）
+                  echo "🔍 Verifying keystore contents:"
+                  keytool -list -keystore android/app/release.keystore -storepass "${{ secrets.KEYSTORE_PASSWORD }}" || echo "⚠️ Unable to list keystore entries"
 
-                    echo "🔐 Keystore configured securely"
+                  echo "🔐 Keystore configured securely"
 
-# 🚀 构建 Android APK
+            # 🚀 构建 Android APK
             - name: Build Android APK
-            timeout-minutes: 45
-            run: |
+              timeout-minutes: 45
+              run: |
                   cd android
-      # ... 后续保持不变 ...
 
                   echo "📱 Starting Android APK build..."
 
@@ -292,7 +291,8 @@ jobs:
                   GRADLE_OPTS: '-Dorg.gradle.jvmargs=-Xmx4g -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8'
                   ANDROID_COMPILE_SDK: '34'
                   ANDROID_BUILD_TOOLS: '34.0.0'
-                  ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
+                  # 注意：ANDROID_SDK_ROOT 由 android-actions/setup-android 自动设置，无需显式传递
+                  # 如果确需手动指定，可改为 ${{ env.ANDROID_SDK_ROOT }} 或 $ANDROID_SDK_ROOT
 
             # 📤 上传构建产物
             - name: Upload All APKs as artifacts
